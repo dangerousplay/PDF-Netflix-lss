@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/emirpasic/gods/lists/arraylist"
 	"github.com/jung-kurt/gofpdf"
 	"github.com/wcharczuk/go-chart"
 	"io"
@@ -27,18 +28,24 @@ type Alocacao struct {
 
 //export generatePDF
 func generatePDF(ids []int, dataInicial []uint64, dataFinal []uint64, dataEntrega []uint64, valores []float64) ([]byte, error) {
-	var alocacoes []Alocacao
+	alocacoes := arraylist.New()
 
-	for i := 0; i < len(ids); i++ {
+	for i, v := range ids {
 		aloc := Alocacao{
-			id:          ids[i],
+			id:          v,
 			dataInicial: dataInicial[i],
 			dataEntrega: dataEntrega[i],
 			dataFinal:   dataFinal[i],
 		}
 
-		alocacoes = append(alocacoes, aloc)
+		alocacoes.Add(aloc)
 	}
+
+	var atrasadas = alocacoes.Select(func(index int, value interface{}) bool {
+		aloc, _ := value.(Alocacao)
+		return aloc.dataFinal < aloc.dataEntrega
+	})
+
 
 	pdf := gofpdf.New("P", "mm", "A4", "")
 
@@ -64,7 +71,7 @@ func generatePDF(ids []int, dataInicial []uint64, dataFinal []uint64, dataEntreg
 			Style: chart.StyleShow(),
 		},
 		Bars: []chart.Value{
-			{Value: float64(len(ids)), Label: ""},
+			{Value: , Label: "Atrasadas"},
 			{Value: 5.25, Label: "America"},
 			{Value: 4.88, Label: "Brasil"},
 			{Value: 4.74, Label: "USA"},
