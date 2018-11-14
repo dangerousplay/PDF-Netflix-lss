@@ -7,9 +7,10 @@ import (
 	"github.com/jung-kurt/gofpdf"
 	"github.com/wcharczuk/go-chart"
 	"io"
-	"os"
 	"time"
 )
+
+import "C"
 
 type Filme struct {
 	nome          string
@@ -28,7 +29,7 @@ type Alocacao struct {
 }
 
 //export generatePDF
-func generatePDF(ids []int, dataInicial []uint64, dataFinal []uint64, dataEntrega []uint64, valores []float64) ([]byte, error) {
+func generatePDF(ids []int, dataInicial []uint64, dataFinal []uint64, dataEntrega []uint64, valores []float64, multas []float64) ([]byte, error) {
 	alocacoes := arraylist.New()
 
 	for i, v := range ids {
@@ -76,17 +77,17 @@ func generatePDF(ids []int, dataInicial []uint64, dataFinal []uint64, dataEntreg
 				Top: 60,
 			},
 		},
-		Height:   512,
-		BarWidth: 60,
-		Width:    800,
+		Height:   256,
+		BarWidth: 30,
+		Width:    400,
 		XAxis:    chart.StyleShow(),
 		YAxis: chart.YAxis{
 			Style: chart.StyleShow(),
 		},
 		Bars: []chart.Value{
-			{Value: float64(atrasadas), Label: "Atrasadas"},
-			{Value: float64(pendentes), Label: "Pendentes"},
-			{Value: float64(entregues), Label: "Entregues"},
+			{Value: float64(atrasadas), Style: chart.Style{FontSize: 30}, Label: "Atrasadas"},
+			{Value: float64(pendentes), Style: chart.Style{FontSize: 30}, Label: "Pendentes"},
+			{Value: float64(entregues), Style: chart.Style{FontSize: 30}, Label: "Entregues"},
 		},
 	}
 
@@ -99,12 +100,17 @@ func generatePDF(ids []int, dataInicial []uint64, dataFinal []uint64, dataEntreg
 
 	image := pdf.RegisterImageOptionsReader("Alocações realizadas", gofpdf.ImageOptions{ImageType: "png", ReadDpi: true}, io.Reader(buffer))
 
-	pdf.Image("Alocações realizadas", 0, 50, image.Width()/3, image.Height()/3, false, "", 0, "")
+	pdf.Image("Alocações realizadas", 25, 50, image.Width(), image.Height(), false, "", 0, "")
 
 	var vendas float64
+	var multasV float64
 
 	for _, v := range valores {
 		vendas += v
+	}
+
+	for _, v := range multas {
+		multasV += v
 	}
 
 	sbc = chart.BarChart{
@@ -115,16 +121,16 @@ func generatePDF(ids []int, dataInicial []uint64, dataFinal []uint64, dataEntreg
 				Top: 60,
 			},
 		},
-		Height:   512,
-		BarWidth: 60,
-		Width:    800,
+		Height:   256,
+		BarWidth: 30,
+		Width:    400,
 		XAxis:    chart.StyleShow(),
 		YAxis: chart.YAxis{
 			Style: chart.StyleShow(),
 		},
 		Bars: []chart.Value{
-			{Value: vendas, Label: "Vendas"},
-			{Value: 0, Label: "Multas"},
+			{Value: vendas, Style: chart.Style{FontSize: 30}, Label: "Alocações"},
+			{Value: multasV, Style: chart.Style{FontSize: 30}, Label: "Multas"},
 		},
 	}
 
@@ -137,7 +143,7 @@ func generatePDF(ids []int, dataInicial []uint64, dataFinal []uint64, dataEntreg
 
 	image = pdf.RegisterImageOptionsReader("Arrecadações", gofpdf.ImageOptions{ImageType: "png", ReadDpi: true}, io.Reader(buffer))
 
-	pdf.Image("Arrecadações", 100, 50, image.Width()/3, image.Height()/3, false, "", 0, "")
+	pdf.Image("Arrecadações", 25, 150, image.Width(), image.Height(), false, "", 0, "")
 
 	pdfBuffer := bytes.NewBuffer([]byte{})
 
@@ -147,7 +153,7 @@ func generatePDF(ids []int, dataInicial []uint64, dataFinal []uint64, dataEntreg
 }
 
 func main() {
-	fmt.Print("hello")
+	/*fmt.Print("hello")
 
 	ids := []int{1, 5, 8, 7}
 
@@ -171,7 +177,7 @@ func main() {
 
 	file.Sync()
 
-	file.Close()
+	file.Close()*/
 
 	/*pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
